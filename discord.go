@@ -9,36 +9,39 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const VERSION = "0.28.1"
-
+const VERSION = "0.30.5"
 const clientTimeout = 20 * time.Second
 
-func New(token string) (s *Session, err error) {
-	s = &Session{
+func New(token string) (*Session, error) {
+	session := &Session{
 		State:                              NewState(),
 		Ratelimiter:                        NewRatelimiter(),
 		StateEnabled:                       true,
 		Compress:                           true,
-		ShouldReconnectOnError:             true,
-		ShouldReconnectVoiceOnSessionError: true,
-		ShouldRetryOnRateLimit:             true,
-		ShardID:                            0,
-		ShardCount:                         1,
-		MaxRestRetries:                     3,
+		Token:                              token,
 		Client:                             &http.Client{Timeout: clientTimeout},
 		Dialer:                             websocket.DefaultDialer,
 		UserAgent:                          fmt.Sprintf("discordgo (https://github.com/jacobbernoulli/discordgo, v%s)", VERSION),
 		sequence:                           new(int64),
 		LastHeartbeatAck:                   time.Now().UTC(),
+		ShardID:                            0,
+		ShardCount:                         1,
+		MaxRestRetries:                     3,
+		ShouldReconnectOnError:             true,
+		ShouldReconnectVoiceOnSessionError: true,
+		ShouldRetryOnRateLimit:             true,
 	}
 
-	s.Identify.Compress = true
-	s.Identify.LargeThreshold = 250
-	s.Identify.Intents = IntentsAllWithoutPrivileged
-	s.Identify.Properties.OS = runtime.GOOS
-	s.Identify.Properties.Browser = fmt.Sprintf("discordgo v%s", VERSION)
-	s.Identify.Token = token
-	s.Token = token
+	session.Identify = Identify{
+		Token:          token,
+		Compress:       true,
+		LargeThreshold: 250,
+		Intents:        IntentsAllWithoutPrivileged,
+		Properties: IdentifyProperties{
+			OS:      runtime.GOOS,
+			Browser: fmt.Sprintf("discordgo v%s", VERSION),
+		},
+	}
 
-	return
+	return session, nil
 }
