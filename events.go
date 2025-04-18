@@ -207,7 +207,7 @@ type MessageCreate struct {
 }
 
 func (m *MessageCreate) UnmarshalJSON(b []byte) error {
-	return json.Unmarshal(b, &m.Message)
+	return Unmarshal(b, &m.Message)
 }
 
 type MessageUpdate struct {
@@ -216,7 +216,7 @@ type MessageUpdate struct {
 }
 
 func (m *MessageUpdate) UnmarshalJSON(b []byte) error {
-	return json.Unmarshal(b, &m.Message)
+	return Unmarshal(b, &m.Message)
 }
 
 type MessageDelete struct {
@@ -225,7 +225,7 @@ type MessageDelete struct {
 }
 
 func (m *MessageDelete) UnmarshalJSON(b []byte) error {
-	return json.Unmarshal(b, &m.Message)
+	return Unmarshal(b, &m.Message)
 }
 
 type MessageReactionAdd struct {
@@ -290,7 +290,7 @@ type InteractionCreate struct {
 }
 
 func (i *InteractionCreate) UnmarshalJSON(b []byte) error {
-	return json.Unmarshal(b, &i.Interaction)
+	return Unmarshal(b, &i.Interaction)
 }
 
 type InviteCreate struct {

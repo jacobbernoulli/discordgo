@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/zlib"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,10 +12,6 @@ import (
 
 	"github.com/gorilla/websocket"
 )
-
-var ErrWSAlreadyOpen = errors.New("websocket connection is already open")
-var ErrWSNotFound = errors.New("no active websocket connection found")
-var ErrWSShardBounds = errors.New("ShardID must be less than ShardCount, but got invalid values")
 
 type resumePacket struct {
 	Op   int `json:"op"`
@@ -86,7 +81,7 @@ func (s *Session) Open() error {
 	s.LastHeartbeatAck = time.Now().UTC()
 
 	var h helloOp
-	if err := json.Unmarshal(e.RawData, &h); err != nil {
+	if err := Unmarshal(e.RawData, &h); err != nil {
 		return fmt.Errorf("error unmarshalling helloOp: %s", err)
 	}
 
@@ -501,7 +496,7 @@ func (s *Session) onEvent(messageType int, message []byte) (*Event, error) {
 	if eh, ok := registeredInterfaceProviders[e.Type]; ok {
 		e.Struct = eh.New()
 
-		if err = json.Unmarshal(e.RawData, e.Struct); err != nil {
+		if err = Unmarshal(e.RawData, e.Struct); err != nil {
 			s.log(LogError, "error unmarshalling %s event, %s", e.Type, err)
 		}
 		s.handleEvent(e.Type, e.Struct)

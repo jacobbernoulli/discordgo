@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"regexp"
 	"sync"
 	"time"
 
@@ -438,10 +437,6 @@ type Emoji struct {
 	Animated      bool     `json:"animated"`
 	Available     bool     `json:"available"`
 }
-
-var (
-	EmojiRegex = regexp.MustCompile(`<(a|):[A-Za-z0-9_~]+:[0-9]{18,20}>`)
-)
 
 func (e *Emoji) MessageFormat() string {
 	if e.ID != "" && e.Name != "" {
@@ -953,7 +948,7 @@ func (t *TimeStamps) UnmarshalJSON(data []byte) error {
 		Start float64 `json:"start,omitempty"`
 	}
 
-	if err := json.Unmarshal(data, &aux); err != nil {
+	if err := Unmarshal(data, &aux); err != nil {
 		return err
 	}
 
@@ -1056,7 +1051,7 @@ func (t *TooManyRequests) UnmarshalJSON(data []byte) error {
 		RetryAfter float64 `json:"retry_after"`
 	}
 
-	if err := json.Unmarshal(data, &aux); err != nil {
+	if err := Unmarshal(data, &aux); err != nil {
 		return err
 	}
 
@@ -1363,7 +1358,7 @@ func (p GuildMemberParams) MarshalJSON() (res []byte, err error) {
 		if *p.ChannelID == "" {
 			v.ChannelID = json.RawMessage(`null`)
 		} else {
-			res, err = json.Marshal(p.ChannelID)
+			res, err = Marshal(p.ChannelID)
 			if err != nil {
 				return
 			}
@@ -1375,7 +1370,7 @@ func (p GuildMemberParams) MarshalJSON() (res []byte, err error) {
 		if p.CommunicationDisabledUntil.IsZero() {
 			v.CommunicationDisabledUntil = json.RawMessage(`null`)
 		} else {
-			res, err = json.Marshal(p.CommunicationDisabledUntil)
+			res, err = Marshal(p.CommunicationDisabledUntil)
 			if err != nil {
 				return
 			}
@@ -1383,7 +1378,7 @@ func (p GuildMemberParams) MarshalJSON() (res []byte, err error) {
 		}
 	}
 
-	return json.Marshal(v)
+	return Marshal(v)
 }
 
 type GuildMemberAddParams struct {
@@ -1464,7 +1459,7 @@ func (a *Activity) UnmarshalJSON(data []byte) error {
 		SyncID        string       `json:"sync_id,omitempty"`
 	}
 
-	if err := json.Unmarshal(data, &aux); err != nil {
+	if err := Unmarshal(data, &aux); err != nil {
 		return err
 	}
 

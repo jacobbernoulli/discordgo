@@ -32,25 +32,31 @@ func (umc *unmarshalableMessageComponent) UnmarshalJSON(src []byte) error {
 		Type ComponentType `json:"type"`
 	}
 
-	if err := json.Unmarshal(src, &v); err != nil {
+	if err := Unmarshal(src, &v); err != nil {
 		return err
 	}
 
+	var component MessageComponent
 	switch v.Type {
 	case ActionsRowComponent:
-		umc.MessageComponent = &ActionsRow{}
+		component = &ActionsRow{}
 	case ButtonComponent:
-		umc.MessageComponent = &Button{}
+		component = &Button{}
 	case SelectMenuComponent, ChannelSelectMenuComponent, UserSelectMenuComponent,
 		RoleSelectMenuComponent, MentionableSelectMenuComponent:
-		umc.MessageComponent = &SelectMenu{}
+		component = &SelectMenu{}
 	case TextInputComponent:
-		umc.MessageComponent = &TextInput{}
+		component = &TextInput{}
 	default:
 		return fmt.Errorf("unknown component type: %d", v.Type)
 	}
 
-	return json.Unmarshal(src, umc.MessageComponent)
+	if err := Unmarshal(src, component); err != nil {
+		return err
+	}
+
+	umc.MessageComponent = component
+	return nil
 }
 
 func MessageComponentFromJSON(b []byte) (MessageComponent, error) {
@@ -82,7 +88,7 @@ func (r *ActionsRow) UnmarshalJSON(data []byte) error {
 		RawComponents []unmarshalableMessageComponent `json:"components"`
 	}
 
-	if err := json.Unmarshal(data, &v); err != nil {
+	if err := Unmarshal(data, &v); err != nil {
 		return err
 	}
 

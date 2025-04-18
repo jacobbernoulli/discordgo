@@ -3,8 +3,6 @@ package discordgo
 import (
 	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"image"
 	_ "image/jpeg"
@@ -16,21 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-)
-
-var (
-	ErrJSONUnmarshal           = errors.New("failed to unmarshal JSON")
-	ErrStatusOffline           = errors.New("cannot set status to offline")
-	ErrVerificationLevelBounds = errors.New("verification level must be between 0 and 3")
-	ErrPruneDaysBounds         = errors.New("prune days must be at least 1")
-	ErrGuildNoIcon             = errors.New("guild does not have an icon")
-	ErrGuildNoSplash           = errors.New("guild does not have a splash image")
-	ErrUnauthorized            = errors.New("unauthorized: invalid or missing token")
-)
-
-var (
-	Marshal   func(v interface{}) ([]byte, error)   = json.Marshal
-	Unmarshal func(src []byte, v interface{}) error = json.Unmarshal
 )
 
 type RESTError struct {

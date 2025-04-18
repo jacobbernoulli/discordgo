@@ -1,15 +1,10 @@
 package discordgo
 
 import (
-	"errors"
 	"log"
 	"sort"
 	"sync"
 )
-
-var ErrNilState = errors.New("state not found, please use discordgo.New() or assign Session.State")
-var ErrStateNotFound = errors.New("state cache not found")
-var ErrMessageIncompletePermissions = errors.New("message incomplete, unable to determine permissions")
 
 type State struct {
 	sync.RWMutex

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -205,7 +204,7 @@ type rawInteraction struct {
 
 func (i *Interaction) UnmarshalJSON(raw []byte) error {
 	var tmp rawInteraction
-	if err := json.Unmarshal(raw, &tmp); err != nil {
+	if err := Unmarshal(raw, &tmp); err != nil {
 		return err
 	}
 
@@ -216,19 +215,19 @@ func (i *Interaction) UnmarshalJSON(raw []byte) error {
 	switch tmp.Type {
 	case InteractionApplicationCommand, InteractionApplicationCommandAutocomplete:
 		var v ApplicationCommandInteractionData
-		if err := json.Unmarshal(tmp.Data, &v); err != nil {
+		if err := Unmarshal(tmp.Data, &v); err != nil {
 			return err
 		}
 		parsed = v
 	case InteractionMessageComponent:
 		var v MessageComponentInteractionData
-		if err := json.Unmarshal(tmp.Data, &v); err != nil {
+		if err := Unmarshal(tmp.Data, &v); err != nil {
 			return err
 		}
 		parsed = v
 	case InteractionModalSubmit:
 		var v ModalSubmitInteractionData
-		if err := json.Unmarshal(tmp.Data, &v); err != nil {
+		if err := Unmarshal(tmp.Data, &v); err != nil {
 			return err
 		}
 		parsed = v
@@ -326,21 +325,23 @@ func (ModalSubmitInteractionData) Type() InteractionType {
 }
 
 func (d *ModalSubmitInteractionData) UnmarshalJSON(data []byte) error {
-	type modalSubmitInteractionData ModalSubmitInteractionData
 	var v struct {
-		modalSubmitInteractionData
+		ModalSubmitInteractionData
 		RawComponents []unmarshalableMessageComponent `json:"components"`
 	}
-	err := json.Unmarshal(data, &v)
-	if err != nil {
+
+	if err := Unmarshal(data, &v); err != nil {
 		return err
 	}
-	*d = ModalSubmitInteractionData(v.modalSubmitInteractionData)
+
+	*d = ModalSubmitInteractionData(v.ModalSubmitInteractionData)
 	d.Components = make([]MessageComponent, len(v.RawComponents))
-	for i, v := range v.RawComponents {
-		d.Components[i] = v.MessageComponent
+
+	for i, component := range v.RawComponents {
+		d.Components[i] = component.MessageComponent
 	}
-	return err
+
+	return nil
 }
 
 type ApplicationCommandInteractionDataOption struct {
@@ -522,7 +523,7 @@ func VerifyInteraction(r *http.Request, key ed25519.PublicKey) bool {
 	var body bytes.Buffer
 
 	defer func() {
-		r.Body = ioutil.NopCloser(&body)
+		r.Body = io.NopCloser(&body)
 	}()
 
 	_, err = io.Copy(&msg, io.TeeReader(r.Body, &body))

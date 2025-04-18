@@ -1,7 +1,7 @@
 package discordgo
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -77,7 +77,7 @@ func (m *Message) UnmarshalJSON(data []byte) error {
 		RawComponents []unmarshalableMessageComponent `json:"components"`
 	}
 
-	if err := json.Unmarshal(data, &temp); err != nil {
+	if err := Unmarshal(data, &temp); err != nil {
 		return err
 	}
 
@@ -92,6 +92,8 @@ func (m *Message) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
+var EmojiRegex = regexp.MustCompile(`<(a|):[A-Za-z0-9_~]+:[0-9]{18,20}>`)
 
 func (m *Message) GetCustomEmojis() []*Emoji {
 	var toReturn []*Emoji
@@ -473,3 +475,19 @@ func (v *VoiceConnection) log(msgL int, format string, a ...interface{}) {
 
 	msglog(msgL, 2, format, a...)
 }
+
+var (
+	ErrWSAlreadyOpen                = errors.New("websocket connection is already open, cannot open a new connection while the current one is active")
+	ErrWSNotFound                   = errors.New("no active websocket connection found, please establish a connection before attempting this action")
+	ErrWSShardBounds                = errors.New("invalid ShardID or ShardCount: ShardID must be less than ShardCount")
+	ErrNilState                     = errors.New("state not found, please ensure that the session is properly initialized using discordgo.New() or manually assign Session.State")
+	ErrStateNotFound                = errors.New("state cache not found, the session might not be initialized correctly or might have expired")
+	ErrMessageIncompletePermissions = errors.New("message incomplete: unable to determine permissions for this action due to missing information")
+	ErrJSONUnmarshal                = errors.New("failed to unmarshal JSON, the provided data may not match the expected structure")
+	ErrStatusOffline                = errors.New("cannot set status to offline: the system does not support setting an offline status")
+	ErrVerificationLevelBounds      = errors.New("invalid verification level: it must be a value between 0 and 3 (inclusive)")
+	ErrPruneDaysBounds              = errors.New("invalid prune days value: it must be at least 1 day")
+	ErrGuildNoIcon                  = errors.New("guild does not have an icon set, ensure the guild has an icon before proceeding")
+	ErrGuildNoSplash                = errors.New("guild does not have a splash image set, ensure the guild has a splash image before proceeding")
+	ErrUnauthorized                 = errors.New("unauthorized access: invalid or missing token, please provide a valid token")
+)
