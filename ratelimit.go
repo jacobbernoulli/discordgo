@@ -1,6 +1,7 @@
 package discordgo
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 	"strconv"
@@ -127,12 +128,9 @@ func (b *Bucket) Release(headers http.Header) error {
 	if resetAfter != "" {
 		parsedAfter, err := strconv.ParseFloat(resetAfter, 64)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid X-RateLimit-Reset-After: %w", err)
 		}
-
-		whole, frac := math.Modf(parsedAfter)
-		resetAt := time.Now().Add(time.Duration(whole) * time.Second).Add(time.Duration(frac*1000) * time.Millisecond)
-
+		resetAt := time.Now().Add(time.Duration(parsedAfter * float64(time.Second)))
 		if global != "" {
 			atomic.StoreInt64(b.global, resetAt.UnixNano())
 		} else {
@@ -141,25 +139,24 @@ func (b *Bucket) Release(headers http.Header) error {
 	} else if reset != "" {
 		discordTime, err := http.ParseTime(headers.Get("Date"))
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid Date header: %w", err)
 		}
-
 		unix, err := strconv.ParseFloat(reset, 64)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid X-RateLimit-Reset: %w", err)
 		}
 
-		whole, frac := math.Modf(unix)
-		delta := time.Unix(int64(whole), 0).Add(time.Duration(frac*1000)*time.Millisecond).Sub(discordTime) + time.Millisecond*250
+		resetAt := time.Unix(int64(unix), int64((unix-math.Floor(unix))*1e9))
+		delta := resetAt.Sub(discordTime) + 250*time.Millisecond
 		b.reset = time.Now().Add(delta)
 	}
 
 	if remaining != "" {
-		parsedRemaining, err := strconv.ParseInt(remaining, 10, 32)
+		remaining, err := strconv.Atoi(remaining)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid X-RateLimit-Remaining: %w", err)
 		}
-		b.Remaining = int(parsedRemaining)
+		b.Remaining = remaining
 	}
 
 	return nil
