@@ -205,36 +205,38 @@ type rawInteraction struct {
 
 func (i *Interaction) UnmarshalJSON(raw []byte) error {
 	var tmp rawInteraction
-	err := json.Unmarshal(raw, &tmp)
-	if err != nil {
+	if err := json.Unmarshal(raw, &tmp); err != nil {
 		return err
 	}
 
 	*i = Interaction(tmp.interaction)
 
+	var parsed InteractionData
+
 	switch tmp.Type {
 	case InteractionApplicationCommand, InteractionApplicationCommandAutocomplete:
-		v := ApplicationCommandInteractionData{}
-		err = json.Unmarshal(tmp.Data, &v)
-		if err != nil {
+		var v ApplicationCommandInteractionData
+		if err := json.Unmarshal(tmp.Data, &v); err != nil {
 			return err
 		}
-		i.Data = v
+		parsed = v
 	case InteractionMessageComponent:
-		v := MessageComponentInteractionData{}
-		err = json.Unmarshal(tmp.Data, &v)
-		if err != nil {
+		var v MessageComponentInteractionData
+		if err := json.Unmarshal(tmp.Data, &v); err != nil {
 			return err
 		}
-		i.Data = v
+		parsed = v
 	case InteractionModalSubmit:
-		v := ModalSubmitInteractionData{}
-		err = json.Unmarshal(tmp.Data, &v)
-		if err != nil {
+		var v ModalSubmitInteractionData
+		if err := json.Unmarshal(tmp.Data, &v); err != nil {
 			return err
 		}
-		i.Data = v
+		parsed = v
+	default:
+		return nil
 	}
+
+	i.Data = parsed
 	return nil
 }
 

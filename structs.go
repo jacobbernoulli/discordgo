@@ -947,17 +947,18 @@ type TimeStamps struct {
 	StartTimestamp int64 `json:"start,omitempty"`
 }
 
-func (t *TimeStamps) UnmarshalJSON(b []byte) error {
-	temp := struct {
+func (t *TimeStamps) UnmarshalJSON(data []byte) error {
+	var aux struct {
 		End   float64 `json:"end,omitempty"`
 		Start float64 `json:"start,omitempty"`
-	}{}
-	err := Unmarshal(b, &temp)
-	if err != nil {
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	t.EndTimestamp = int64(temp.End)
-	t.StartTimestamp = int64(temp.Start)
+
+	t.EndTimestamp = int64(aux.End)
+	t.StartTimestamp = int64(aux.Start)
 	return nil
 }
 
@@ -1048,21 +1049,22 @@ type TooManyRequests struct {
 	RetryAfter time.Duration `json:"retry_after"`
 }
 
-func (t *TooManyRequests) UnmarshalJSON(b []byte) error {
-	u := struct {
+func (t *TooManyRequests) UnmarshalJSON(data []byte) error {
+	var aux struct {
 		Bucket     string  `json:"bucket"`
 		Message    string  `json:"message"`
 		RetryAfter float64 `json:"retry_after"`
-	}{}
-	err := Unmarshal(b, &u)
-	if err != nil {
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
 
-	t.Bucket = u.Bucket
-	t.Message = u.Message
-	whole, frac := math.Modf(u.RetryAfter)
-	t.RetryAfter = time.Duration(whole)*time.Second + time.Duration(frac*1000)*time.Millisecond
+	t.Bucket = aux.Bucket
+	t.Message = aux.Message
+	secs, frac := math.Modf(aux.RetryAfter)
+	t.RetryAfter = time.Duration(secs)*time.Second + time.Duration(frac*1e3)*time.Millisecond
+
 	return nil
 }
 
@@ -1443,8 +1445,8 @@ type Activity struct {
 	SyncID        string       `json:"sync_id,omitempty"`
 }
 
-func (activity *Activity) UnmarshalJSON(b []byte) error {
-	temp := struct {
+func (a *Activity) UnmarshalJSON(data []byte) error {
+	var aux struct {
 		Name          string       `json:"name"`
 		Type          ActivityType `json:"type"`
 		URL           string       `json:"url,omitempty"`
@@ -1460,28 +1462,29 @@ func (activity *Activity) UnmarshalJSON(b []byte) error {
 		Instance      bool         `json:"instance,omitempty"`
 		Flags         int          `json:"flags,omitempty"`
 		SyncID        string       `json:"sync_id,omitempty"`
-	}{}
+	}
 
-	err := Unmarshal(b, &temp)
-	if err != nil {
+	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
 
-	activity.ApplicationID = temp.ApplicationID.String()
-	activity.CreatedAt = time.Unix(0, temp.CreatedAt*1000000)
-	activity.Assets = temp.Assets
-	activity.Details = temp.Details
-	activity.Emoji = temp.Emoji
-	activity.Flags = temp.Flags
-	activity.Instance = temp.Instance
-	activity.Name = temp.Name
-	activity.Party = temp.Party
-	activity.Secrets = temp.Secrets
-	activity.State = temp.State
-	activity.Timestamps = temp.Timestamps
-	activity.Type = temp.Type
-	activity.URL = temp.URL
-	activity.SyncID = temp.SyncID
+	*a = Activity{
+		Name:          aux.Name,
+		Type:          aux.Type,
+		URL:           aux.URL,
+		CreatedAt:     time.Unix(0, aux.CreatedAt*int64(time.Millisecond)),
+		ApplicationID: aux.ApplicationID.String(),
+		State:         aux.State,
+		Details:       aux.Details,
+		Timestamps:    aux.Timestamps,
+		Emoji:         aux.Emoji,
+		Party:         aux.Party,
+		Assets:        aux.Assets,
+		Secrets:       aux.Secrets,
+		Instance:      aux.Instance,
+		Flags:         aux.Flags,
+		SyncID:        aux.SyncID,
+	}
 
 	return nil
 }

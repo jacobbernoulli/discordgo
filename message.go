@@ -71,21 +71,26 @@ type Message struct {
 }
 
 func (m *Message) UnmarshalJSON(data []byte) error {
-	type message Message
-	var v struct {
-		message
+	type Alias Message
+	var temp struct {
+		Alias
 		RawComponents []unmarshalableMessageComponent `json:"components"`
 	}
-	err := json.Unmarshal(data, &v)
-	if err != nil {
+
+	if err := json.Unmarshal(data, &temp); err != nil {
 		return err
 	}
-	*m = Message(v.message)
-	m.Components = make([]MessageComponent, len(v.RawComponents))
-	for i, v := range v.RawComponents {
-		m.Components[i] = v.MessageComponent
+
+	*m = Message(temp.Alias)
+
+	if len(temp.RawComponents) > 0 {
+		m.Components = make([]MessageComponent, len(temp.RawComponents))
+		for i, component := range temp.RawComponents {
+			m.Components[i] = component.MessageComponent
+		}
 	}
-	return err
+
+	return nil
 }
 
 func (m *Message) GetCustomEmojis() []*Emoji {
