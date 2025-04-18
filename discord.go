@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const VERSION = "0.30.5"
+const VERSION = "0.30.6"
 const clientTimeout = 20 * time.Second
 
 func New(token string) (*Session, error) {
